@@ -21,17 +21,39 @@ fn convert_to_vector(input_file_name: &str) -> Vec<Vec<i32>> {
 }
 
 fn calculate_secure_codes(input_values: Vec<Vec<i32>>) -> i32 {
-    let mut secure_coodes: i32 = 0;
+    let mut secure_codes: i32 = 0;
 
     for values in input_values.iter() {
         let valid = validate_secure_codes(values);
 
         if valid {
-            secure_coodes = secure_coodes + 1;
+            secure_codes = secure_codes + 1;
         }
     }
 
-    return secure_coodes;
+    return secure_codes;
+}
+
+fn calculate_secure_codes_tolerate_single_level_error(input_values: Vec<Vec<i32>>) -> i32 {
+    let mut secure_codes: i32 = 0;
+
+    for values in input_values.iter() {
+        let mut valid = validate_secure_codes(values);
+        let mut index = 0;
+
+        while !valid && index < values.len() {
+            let mut values_without_removed_level = values.clone();
+            values_without_removed_level.remove(index);
+            valid = validate_secure_codes(&values_without_removed_level);
+            index = index + 1;
+        }
+
+        if valid {
+            secure_codes = secure_codes + 1;
+        }
+    }
+
+    return secure_codes;
 }
 
 fn validate_secure_codes(input_values: &Vec<i32>) -> bool {
@@ -94,7 +116,31 @@ fn history_part_one() {
     )
 }
 
+fn history_example_part_two() {
+    let start = Instant::now();
+    let input_values = convert_to_vector("./src/history_example_part_two_data.txt");
+    let secure_codes = calculate_secure_codes_tolerate_single_level_error(input_values);
+    let duration = start.elapsed();
+    print!(
+        "History example two one. Secure codes {}. Time: {:?}  \n",
+        secure_codes, duration
+    )
+}
+
+fn history_part_two() {
+    let start = Instant::now();
+    let input_values = convert_to_vector("./src/history_part_two_data.txt");
+    let secure_codes = calculate_secure_codes_tolerate_single_level_error(input_values);
+    let duration = start.elapsed();
+    print!(
+        "History part two. Secure codes {}. Time: {:?}  \n",
+        secure_codes, duration
+    )
+}
+
 fn main() {
     history_example_part_one();
     history_part_one();
+    history_example_part_two();
+    history_part_two();
 }
