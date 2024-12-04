@@ -15,7 +15,7 @@ fn convert_to_vector(input_file_name: &str) -> Vec<String> {
     return vect_input;
 }
 
-fn count_world(input_values: &Vec<String>) -> i32 {
+fn count_word(input_values: &Vec<String>) -> i32 {
     let mut count = count_vertical(input_values);
     count = count + count_horizontal(input_values);
     count = count + count_diagonal_right_direction(input_values);
@@ -163,7 +163,7 @@ fn count_match_word(word: &str, value: &str) -> i32 {
 fn history_example_part_one() {
     let start = Instant::now();
     let input_values = convert_to_vector("./src/history_example_part_one_data.txt");
-    let count = count_world(&input_values);
+    let count = count_word(&input_values);
     let duration = start.elapsed();
     print!(
         "History example part one. Count {}. Time: {:?}  \n",
@@ -174,7 +174,7 @@ fn history_example_part_one() {
 fn history_part_one() {
     let start = Instant::now();
     let input_values = convert_to_vector("./src/history_part_one_data.txt");
-    let count = count_world(&input_values);
+    let count = count_word(&input_values);
     let duration = start.elapsed();
     print!(
         "History part one. Count {}. Time: {:?}  \n",
