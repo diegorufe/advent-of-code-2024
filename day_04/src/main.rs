@@ -182,7 +182,118 @@ fn history_part_one() {
     )
 }
 
+fn count_x(input_values: &Vec<String>) -> i32 {
+    let mut count = 0;
+
+    for (index, value) in input_values.iter().enumerate() {
+        for (character_index, character) in value.chars().enumerate() {
+            let exists_forward = count_forward(character, character_index, index, input_values);
+            let exists_backward = count_backward(value, character_index, index, input_values);
+            if exists_forward && exists_backward {
+                count = count + 1;
+            }
+        }
+    }
+
+    return count;
+}
+
+fn count_forward(
+    character: char,
+    character_index: usize,
+    input_value_index: usize,
+    input_values: &Vec<String>,
+) -> bool {
+    let mas = "MAS";
+    let mas_reverse = "SAM";
+    let mut builder = String::new();
+    builder.push(character);
+    let mut counter_index = 1;
+
+    while counter_index < 3 {
+        let input_value_index_find = input_value_index + counter_index;
+        if input_value_index_find >= input_values.len() {
+            break;
+        }
+        let input_value = &input_values[input_value_index_find];
+        let character_index_find = character_index + counter_index;
+
+        if character_index_find >= input_value.len() {
+            break;
+        }
+
+        builder.push_str(&input_value[character_index_find..character_index_find + 1]);
+
+        counter_index = counter_index + 1;
+    }
+
+    return builder.contains(mas) || builder.contains(mas_reverse);
+}
+
+fn count_backward(
+    value: &String,
+    character_index: usize,
+    input_value_index: usize,
+    input_values: &Vec<String>,
+) -> bool {
+    let character_index_start = character_index + 2;
+    if character_index_start >= value.len() {
+        return false;
+    }
+    let character = &value[character_index_start..character_index_start + 1];
+    let mas = "MAS";
+    let mas_reverse = "SAM";
+    let mut builder = String::new();
+    builder.push_str(character);
+    let mut counter_index = 1;
+
+    while counter_index < 3 {
+        let input_value_index_find = input_value_index + counter_index;
+        if input_value_index_find >= input_values.len() {
+            break;
+        }
+        let input_value = &input_values[input_value_index_find];
+        let character_index_find: isize = character_index_start as isize - counter_index as isize;
+
+        if character_index_find < 0 {
+            break;
+        }
+
+        builder.push_str(
+            &input_value[character_index_find as usize..character_index_find as usize + 1],
+        );
+
+        counter_index = counter_index + 1;
+    }
+
+    return builder.contains(mas) || builder.contains(mas_reverse);
+}
+
+fn history_example_part_two() {
+    let start = Instant::now();
+    let input_values = convert_to_vector("./src/history_example_part_two_data.txt");
+    let count = count_x(&input_values);
+    let duration = start.elapsed();
+    print!(
+        "History example part two. Count {}. Time: {:?}  \n",
+        count, duration
+    )
+}
+
+fn history_part_two() {
+    let start = Instant::now();
+    let input_values = convert_to_vector("./src/history_part_two_data.txt");
+    let count = count_x(&input_values);
+    let duration = start.elapsed();
+    print!(
+        "History part two. Count {}. Time: {:?}  \n",
+        count, duration
+    )
+}
+
 fn main() {
     history_example_part_one();
     history_part_one();
+    history_example_part_two();
+    history_part_two();
 }
