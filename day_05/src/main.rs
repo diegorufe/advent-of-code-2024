@@ -35,7 +35,7 @@ fn read_data(input_file_name: &str) -> (HashMap<i32, HashSet<i32>>, Vec<Vec<i32>
     return (rules, data);
 }
 
-fn calculate_valid_center_values(rules: &HashMap<i32, HashSet<i32>>, data: Vec<Vec<i32>>) -> i32 {
+fn calculate_valid_center_values(rules: &HashMap<i32, HashSet<i32>>, data: &Vec<Vec<i32>>) -> i32 {
     let mut total: i32 = 0;
 
     for values in data {
@@ -45,7 +45,7 @@ fn calculate_valid_center_values(rules: &HashMap<i32, HashSet<i32>>, data: Vec<V
     return total;
 }
 
-fn find_center_value(rules: &HashMap<i32, HashSet<i32>>, values: Vec<i32>) -> i32 {
+fn is_valid(rules: &HashMap<i32, HashSet<i32>>, values: &Vec<i32>) -> bool {
     let mut valid: bool = true;
 
     for (index, value) in values.iter().enumerate() {
@@ -68,9 +68,13 @@ fn find_center_value(rules: &HashMap<i32, HashSet<i32>>, values: Vec<i32>) -> i3
         }
     }
 
+    return valid;
+}
+
+fn find_center_value(rules: &HashMap<i32, HashSet<i32>>, values: &Vec<i32>) -> i32 {
     let mut center_value = 0;
 
-    if valid {
+    if is_valid(rules, values) {
         let center_index = values.len() / 2;
         center_value = values[center_index];
     }
@@ -92,11 +96,76 @@ fn validate_sequence(sequences: &HashSet<i32>, values: Vec<i32>) -> bool {
     return valid;
 }
 
+fn calculate_invalid_center_values(
+    rules: &HashMap<i32, HashSet<i32>>,
+    data: &Vec<Vec<i32>>,
+) -> i32 {
+    let mut total: i32 = 0;
+
+    for values in data {
+        if !is_valid(rules, values) {
+            total = total + calculate_invalid_value(rules, values);
+        }
+    }
+
+    return total;
+}
+
+fn calculate_invalid_value(rules: &HashMap<i32, HashSet<i32>>, values: &Vec<i32>) -> i32 {
+    let mut valid_values: Vec<i32> = Vec::new();
+    let mut invalid_values = values.clone();
+
+    while valid_values.len() != values.len() {
+        let mut remove_index: isize = -1;
+
+        for (index, value) in invalid_values.iter().enumerate() {
+            if invalid_values.len() == 1 {
+                valid_values.push(*value);
+                break;
+            }
+
+            let mut invalid_values_check = invalid_values.clone();
+            invalid_values_check.remove(index);
+
+            if contains_values(*value, rules, &invalid_values_check) {
+                remove_index = index as isize;
+                valid_values.push(*value);
+                break;
+            }
+        }
+
+        if remove_index >= 0 {
+            invalid_values.remove(remove_index as usize);
+        }
+    }
+
+    return find_center_value(rules, &valid_values);
+}
+
+fn contains_values(value: i32, rules: &HashMap<i32, HashSet<i32>>, values: &Vec<i32>) -> bool {
+    if !rules.contains_key(&value) {
+        return false;
+    }
+
+    let mut valid = false;
+    let sequences = rules.get(&value).expect("unable to find rules");
+
+    for value_check in values {
+        valid = sequences.contains(value_check);
+
+        if !valid {
+            break;
+        }
+    }
+
+    return valid;
+}
+
 fn history_example_part_one() {
     let start = Instant::now();
     let (rules, data): (HashMap<i32, HashSet<i32>>, Vec<Vec<i32>>) =
         read_data("./src/history_example_part_one_data.txt");
-    let total = calculate_valid_center_values(&rules, data);
+    let total = calculate_valid_center_values(&rules, &data);
     let duration = start.elapsed();
     print!(
         "History example part one. Total {}. Time: {:?} \n",
@@ -108,12 +177,35 @@ fn history_part_one() {
     let start = Instant::now();
     let (rules, data): (HashMap<i32, HashSet<i32>>, Vec<Vec<i32>>) =
         read_data("./src/history_part_one_data.txt");
-    let total = calculate_valid_center_values(&rules, data);
+    let total = calculate_valid_center_values(&rules, &data);
     let duration = start.elapsed();
     print!("History part one. Total {}. Time: {:?} \n", total, duration)
+}
+
+fn history_example_part_two() {
+    let start = Instant::now();
+    let (rules, data): (HashMap<i32, HashSet<i32>>, Vec<Vec<i32>>) =
+        read_data("./src/history_example_part_two_data.txt");
+    let total = calculate_invalid_center_values(&rules, &data);
+    let duration = start.elapsed();
+    print!(
+        "History example part two. Total {}. Time: {:?} \n",
+        total, duration
+    )
+}
+
+fn history_part_two() {
+    let start = Instant::now();
+    let (rules, data): (HashMap<i32, HashSet<i32>>, Vec<Vec<i32>>) =
+        read_data("./src/history_part_two_data.txt");
+    let total = calculate_invalid_center_values(&rules, &data);
+    let duration = start.elapsed();
+    print!("History part two. Total {}. Time: {:?} \n", total, duration)
 }
 
 fn main() {
     history_example_part_one();
     history_part_one();
+    history_example_part_two();
+    history_part_two();
 }

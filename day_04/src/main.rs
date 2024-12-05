@@ -187,8 +187,8 @@ fn count_x(input_values: &Vec<String>) -> i32 {
 
     for (index, value) in input_values.iter().enumerate() {
         for (character_index, character) in value.chars().enumerate() {
-            let exists_forward = count_forward(character, character_index, index, input_values);
-            let exists_backward = count_backward(value, character_index, index, input_values);
+            let exists_forward = exists_forward(character, character_index, index, input_values);
+            let exists_backward = exists_backward(value, character_index, index, input_values);
             if exists_forward && exists_backward {
                 count = count + 1;
             }
@@ -198,7 +198,7 @@ fn count_x(input_values: &Vec<String>) -> i32 {
     return count;
 }
 
-fn count_forward(
+fn exists_forward(
     character: char,
     character_index: usize,
     input_value_index: usize,
@@ -230,7 +230,7 @@ fn count_forward(
     return builder.eq(mas) || builder.eq(mas_reverse);
 }
 
-fn count_backward(
+fn exists_backward(
     value: &String,
     character_index: usize,
     input_value_index: usize,
