@@ -227,7 +227,7 @@ fn count_forward(
         counter_index = counter_index + 1;
     }
 
-    return builder.contains(mas) || builder.contains(mas_reverse);
+    return builder.eq(mas) || builder.eq(mas_reverse);
 }
 
 fn count_backward(
