@@ -147,18 +147,9 @@ fn contains_values(value: i32, rules: &HashMap<i32, HashSet<i32>>, values: &Vec<
         return false;
     }
 
-    let mut valid = false;
     let sequences = rules.get(&value).expect("unable to find rules");
 
-    for value_check in values {
-        valid = sequences.contains(value_check);
-
-        if !valid {
-            break;
-        }
-    }
-
-    return valid;
+    return validate_sequence(sequences, values.to_vec());
 }
 
 fn history_example_part_one() {
