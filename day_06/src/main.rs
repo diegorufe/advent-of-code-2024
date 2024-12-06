@@ -13,12 +13,19 @@ enum Direction {
 
 struct Vigilant {
     direction: Direction,
+    direction_start: Direction,
     x: isize,
     y: isize,
     map: Vec<Vec<String>>,
     map_visited: Vec<Vec<bool>>,
     x_last: isize,
     y_last: isize,
+    x_start: isize,
+    y_start: isize,
+    overflow: bool,
+    overflow_visisted: Vec<Vec<bool>>,
+    count_visited: Vec<Vec<i32>>,
+    possible_overflow: bool,
 }
 
 impl Vigilant {
@@ -27,11 +34,35 @@ impl Vigilant {
             x: 0,
             y: 0,
             direction: Direction::Up,
+            direction_start: Direction::Up,
             map: Vec::new(),
             map_visited: Vec::new(),
             x_last: 0,
             y_last: 0,
+            x_start: 0,
+            y_start: 0,
+            overflow: false,
+            overflow_visisted: Vec::new(),
+            count_visited: Vec::new(),
+            possible_overflow: false,
         };
+    }
+
+    fn clear(&mut self) {
+        self.x = self.x_start;
+        self.y = self.y_start;
+        self.x_last = -1;
+        self.y_last = -1;
+        self.overflow = false;
+        self.direction = self.direction_start.clone();
+        self.possible_overflow = false;
+
+        for y in 0..self.overflow_visisted.len() {
+            for x in 0..self.overflow_visisted[0].len() {
+                self.overflow_visisted[y][x] = false;
+                self.count_visited[y][x] = 0;
+            }
+        }
     }
 
     fn move_direction(&mut self, direction: Direction) -> bool {
@@ -62,7 +93,32 @@ impl Vigilant {
         } else {
             let value = &self.map[y_move as usize][x_move as usize];
 
-            if !value.eq("#") {
+            if value.eq("0") {
+                self.possible_overflow = true;
+
+                match direction {
+                    Direction::Up => {
+                        y_move += 1;
+                    }
+                    Direction::Right => {
+                        x_move -= 1;
+                    }
+                    Direction::Left => {
+                        x_move += 1;
+                    }
+                    Direction::Down => {
+                        y_move -= 1;
+                    }
+                }
+
+                if self.overflow_visisted[y_move as usize][x_move as usize] {
+                    self.overflow = true;
+                    self.x = -1;
+                    self.y = -1;
+                }
+
+                self.overflow_visisted[y_move as usize][x_move as usize] = true;
+            } else if !value.eq("#") {
                 moved = true;
                 self.x = x_move;
                 self.y = y_move;
@@ -70,6 +126,16 @@ impl Vigilant {
                 self.map_visited[y_move as usize][x_move as usize] = true;
                 self.x_last = self.x;
                 self.y_last = self.y;
+
+                if self.possible_overflow {
+                    self.count_visited[self.y as usize][self.x as usize] += 1;
+
+                    if self.count_visited[self.y as usize][self.x as usize] > 30 {
+                        self.overflow = true;
+                        self.x = -1;
+                        self.y = -1;
+                    }
+                }
             }
         }
 
@@ -77,6 +143,7 @@ impl Vigilant {
     }
 
     fn patrol(&mut self) -> i32 {
+        self.clear();
         let map_directions = generate_map_directions();
 
         while self.x >= 0 || self.y >= 0 {
@@ -168,24 +235,30 @@ fn read_data(input_file_name: &str) -> Vigilant {
         let mut found = false;
         let mut x_values: Vec<String> = Vec::new();
         let mut x_values_visited: Vec<bool> = Vec::new();
+        let mut x_overflow_visited: Vec<bool> = Vec::new();
+        let mut x_count_visited: Vec<i32> = Vec::new();
 
         for (x, char) in data_lie.chars().enumerate() {
             match char {
                 '^' => {
                     found = true;
                     vigilant.direction = Direction::Up;
+                    vigilant.direction_start = Direction::Up;
                 }
                 '>' => {
                     found = true;
                     vigilant.direction = Direction::Right;
+                    vigilant.direction_start = Direction::Right;
                 }
                 '<' => {
                     found = true;
                     vigilant.direction = Direction::Left;
+                    vigilant.direction_start = Direction::Left;
                 }
                 'v' => {
                     found = true;
                     vigilant.direction = Direction::Down;
+                    vigilant.direction_start = Direction::Down;
                 }
                 _ => {}
             }
@@ -196,15 +269,22 @@ fn read_data(input_file_name: &str) -> Vigilant {
                 x_values.push(".".to_string());
                 found = false;
                 x_values_visited.push(true);
+                vigilant.x_start = vigilant.x;
+                vigilant.y_start = vigilant.y;
             } else {
                 x_values.push(char.to_string());
                 x_values_visited.push(false);
             }
+
+            x_overflow_visited.push(false);
+            x_count_visited.push(0);
         }
 
         y += 1;
         vigilant.map.push(x_values);
         vigilant.map_visited.push(x_values_visited);
+        vigilant.overflow_visisted.push(x_overflow_visited);
+        vigilant.count_visited.push(x_count_visited);
     }
 
     return vigilant;
@@ -232,7 +312,64 @@ fn history_part_one() {
     )
 }
 
+fn overflow_partrol(mut vigilant: Vigilant) -> i32 {
+    let mut count_overflow_rutes = 0;
+    let map_routes_vigilant = vigilant.map.clone();
+    let x_size = vigilant.map[0].len();
+    let y_size = vigilant.map.len();
+
+    for y in 0..y_size {
+        for x in 0..x_size {
+            // println!("Y {}, X {}", y, x);
+
+            let mut map_routes = map_routes_vigilant.clone();
+
+            if (y == vigilant.y_start.try_into().unwrap()
+                && x == vigilant.x_start.try_into().unwrap())
+                || map_routes[y][x].eq("#")
+            {
+                continue;
+            }
+
+            map_routes[y][x] = "0".to_string();
+
+            vigilant.map = map_routes;
+            vigilant.patrol();
+
+            if vigilant.overflow {
+                count_overflow_rutes += 1;
+            }
+        }
+    }
+
+    return count_overflow_rutes;
+}
+
+fn history_example_part_two() {
+    let start: Instant = Instant::now();
+    let vigilant: Vigilant = read_data("./src/history_example_part_two_data.txt");
+    let overflow_routes = overflow_partrol(vigilant);
+    let duration = start.elapsed();
+    print!(
+        "History example part two. Overflow routes {}. Time: {:?} \n",
+        overflow_routes, duration
+    )
+}
+
+fn history_part_two() {
+    let start: Instant = Instant::now();
+    let vigilant: Vigilant = read_data("./src/history_part_two_data.txt");
+    let overflow_routes = overflow_partrol(vigilant);
+    let duration = start.elapsed();
+    print!(
+        "History part two. Overflow routes {}. Time: {:?} \n",
+        overflow_routes, duration
+    )
+}
+
 fn main() {
     history_example_part_one();
     history_part_one();
+    history_example_part_two();
+    history_part_two();
 }
