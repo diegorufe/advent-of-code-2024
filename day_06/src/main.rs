@@ -320,8 +320,6 @@ fn overflow_patrol(mut vigilant: Vigilant) -> i32 {
 
     for y in 0..y_size {
         for x in 0..x_size {
-            // println!("Y {}, X {}", y, x);
-
             let mut map_routes = map_routes_vigilant.clone();
 
             if (y == vigilant.y_start.try_into().unwrap()
