@@ -312,7 +312,7 @@ fn history_part_one() {
     )
 }
 
-fn overflow_partrol(mut vigilant: Vigilant) -> i32 {
+fn overflow_patrol(mut vigilant: Vigilant) -> i32 {
     let mut count_overflow_rutes = 0;
     let map_routes_vigilant = vigilant.map.clone();
     let x_size = vigilant.map[0].len();
@@ -348,7 +348,7 @@ fn overflow_partrol(mut vigilant: Vigilant) -> i32 {
 fn history_example_part_two() {
     let start: Instant = Instant::now();
     let vigilant: Vigilant = read_data("./src/history_example_part_two_data.txt");
-    let overflow_routes = overflow_partrol(vigilant);
+    let overflow_routes = overflow_patrol(vigilant);
     let duration = start.elapsed();
     print!(
         "History example part two. Overflow routes {}. Time: {:?} \n",
@@ -359,7 +359,7 @@ fn history_example_part_two() {
 fn history_part_two() {
     let start: Instant = Instant::now();
     let vigilant: Vigilant = read_data("./src/history_part_two_data.txt");
-    let overflow_routes = overflow_partrol(vigilant);
+    let overflow_routes = overflow_patrol(vigilant);
     let duration = start.elapsed();
     print!(
         "History part two. Overflow routes {}. Time: {:?} \n",
