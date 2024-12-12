@@ -13,13 +13,17 @@ fn calculate(data: Vec<i64>) -> Vec<i64> {
     let mut stones: Vec<i64> = Vec::new();
 
     for value in data.iter() {
-        let value_str = value.to_string();
         if *value == 0 {
             stones.push(1);
-        } else if value_str.len() % 2 == 0 {
-            let middle = value_str.len() / 2;
-            let first: i64 = value_str[0..middle].to_string().parse().unwrap();
-            let second: i64 = value_str[middle..].to_string().parse().unwrap();
+            continue;
+        }
+
+        let len = (*value as f64).log(10.0).floor() as i64 + 1;
+
+        if len % 2 == 0 {
+            let divisor = 10_i64.pow((len / 2 as i64).try_into().unwrap());
+            let first = value / divisor;
+            let second = value % divisor;
 
             stones.push(first);
             stones.push(second);
