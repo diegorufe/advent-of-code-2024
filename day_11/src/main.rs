@@ -114,7 +114,7 @@ fn calculate_stones_cache(levels: usize, data: Vec<i64>) -> HashMap<i64, i64> {
             let transformed = calculate_stone(stone, &mut cache);
 
             for t in transformed {
-                *new_stone_count.entry(t).or_insert(0) += 1 + (count - 1);
+                *new_stone_count.entry(t).or_insert(0) += count;
             }
         }
 
