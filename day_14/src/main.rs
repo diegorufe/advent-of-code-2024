@@ -40,6 +40,81 @@ impl Robot {
     }
 }
 
+struct Tree {
+    values: Vec<Vec<usize>>,
+}
+
+impl Tree {
+    fn clear(&mut self) {
+        for x_values in self.values.iter_mut() {
+            for x in 0..x_values.len() {
+                x_values[x] = 0;
+            }
+        }
+    }
+
+    fn add(&mut self, robot: &mut Robot) {
+        let mut x_values = self.values[robot.p.y as usize].clone();
+        x_values[robot.p.x as usize] = 1;
+        self.values[robot.p.y as usize] = x_values;
+    }
+
+    fn print(&self) {
+        for x_values in self.values.iter() {
+            for x in x_values {
+                if *x == 0 {
+                    print!("-")
+                } else {
+                    print!("*")
+                }
+            }
+            println!("");
+        }
+    }
+
+    fn check(&self) -> bool {
+        let max_x_values = 6;
+        let mut valid = false;
+
+        for (y, x_values) in self.values.iter().enumerate() {
+            let mut count = 0;
+            let mut min_x = 0;
+            let mut max_x = 0;
+
+            for (index, x) in x_values.iter().enumerate() {
+                if *x > 0 {
+                    if min_x == 0 {
+                        min_x = index;
+                    }
+
+                    count += 1;
+
+                    if count == max_x_values {
+                        max_x = index;
+                        break;
+                    }
+                } else if count < max_x_values {
+                    count = 0;
+                    min_x = 0;
+                    max_x = 0;
+                }
+            }
+
+            if count == max_x_values {
+                let total_before: usize = self.values[y - 1][min_x - 1..max_x + 1].iter().sum();
+                let total_after: usize = self.values[y + 1][min_x - 1..max_x + 1].iter().sum();
+                if total_before >= 1 && total_after >= max_x_values {
+                    valid = true;
+                    self.print();
+                    break;
+                }
+            }
+        }
+
+        return valid;
+    }
+}
+
 fn read(input_file_name: &str) -> Vec<Robot> {
     let mut robots: Vec<Robot> = Vec::new();
     let file = File::open(input_file_name).expect("Unable to read file");
@@ -109,6 +184,37 @@ fn calculate(robots: &mut Vec<Robot>, x: isize, y: isize, seconds: isize) -> usi
     return total;
 }
 
+fn calculate_tree(robots: &mut Vec<Robot>, x: isize, y: isize) -> usize {
+    let mut y_values: Vec<Vec<usize>> = Vec::new();
+    for _ in 0..y + 1 {
+        let mut x_values: Vec<usize> = Vec::new();
+        for _ in 0..x + 1 {
+            x_values.push(0);
+        }
+        y_values.push(x_values);
+    }
+
+    let mut tree: Tree = Tree { values: y_values };
+
+    let max_seconds = 100000;
+    let mut second = 1;
+    let mut tree_checked = false;
+
+    while second < max_seconds && !tree_checked {
+        tree.clear();
+
+        for robot in &mut *robots {
+            robot.move_robot(x, y);
+            tree.add(robot);
+        }
+
+        tree_checked = tree.check();
+        second += 1;
+    }
+
+    return second - 1;
+}
+
 fn history_example_part_one() {
     let start = Instant::now();
     let mut robots = read("./src/history_example_part_one_data.txt");
@@ -125,13 +231,19 @@ fn history_part_one() {
     let mut robots = read("./src/history_part_one_data.txt");
     let total = calculate(&mut robots, 100, 102, 100);
     let duration: std::time::Duration = start.elapsed();
-    print!(
-        "History example part one. Total {}. Time: {:?} \n",
-        total, duration
-    )
+    print!("History part one. Total {}. Time: {:?} \n", total, duration)
+}
+
+fn history_part_two() {
+    let start = Instant::now();
+    let mut robots = read("./src/history_part_two_data.txt");
+    let total = calculate_tree(&mut robots, 100, 102);
+    let duration: std::time::Duration = start.elapsed();
+    print!("History part two. Total {}. Time: {:?} \n", total, duration)
 }
 
 fn main() {
     history_example_part_one();
     history_part_one();
+    history_part_two();
 }
